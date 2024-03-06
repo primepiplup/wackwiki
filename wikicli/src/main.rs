@@ -20,7 +20,7 @@ fn main() {
         match args[1].as_str() {
             "help" => print_help(),
             "groups" => groups::handle(args, wikipath),
-            "new" => new::handle(args),
+            "new" => new::handle(args, wikipath),
             _ => {
                 println!("Unrecognized command.\n");
                 print_help();
