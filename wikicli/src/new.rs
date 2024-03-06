@@ -1,4 +1,4 @@
-use crate::dirs;
+use crate::{dirs, articles, user};
 
 pub fn handle(args: Vec<String>, wikipath: String) -> () {
     if args.len() < 3 {
@@ -13,27 +13,60 @@ pub fn handle(args: Vec<String>, wikipath: String) -> () {
 }
 
 fn create_entry(args: Vec<String>, wikipath: String) -> () {
-    if args.len() < 4 {
-        print_help();
+    let mut first_element = args[2].clone();
+    if dirs::contains(&wikipath, &mut first_element) {
+        create_group_entry(&args, wikipath, &first_element);
         return;
     }
 
-    let first_element = &args[3];
-    if dirs::contains(&wikipath, first_element) {
-        create_group_entry(&args, wikipath, first_element);
-        return;
-    }
-
-    create_global_entry(&args, wikipath, first_element);
+    create_global_entry(&args, wikipath, &first_element);
 }
 
 
 fn create_group_entry(args: &Vec<String>, wikipath: String, groupname: &String) -> () {
+    if args.len() < 4 {
+        println!("No entry name was provided.");
+        return;
+    }
 
+    let entryname = &args[3];
+
+    let path = wikipath + "/" + groupname;
+    if articles::exists(&path, entryname) {
+        println!("Article already exists, exiting.");
+        return;
+    }
+
+    let mut entrytext: String;
+    if args.len() > 4 {
+        entrytext = text_collect(5, args);
+    } else {
+        entrytext = match user::collect_entry() {
+            Ok(text) => text,
+            Err(_)   => {
+                println!("Exiting.");
+                return;
+            }
+        };
+    }
+
+    entrytext.push('\n');
+    
+    articles::post(path, entryname, entrytext);
 }
 
-fn create_global_entry(args: &Vec<String>, wikipath: String, groupname: &String) -> () {
+fn create_global_entry(_args: &Vec<String>, _wikipath: String, _groupname: &String) -> () {
+    todo!();
+}
 
+fn text_collect(from: usize, args: &Vec<String>) -> String {
+    let mut text: String = "".to_owned();
+    text += &args[from - 1];
+    for i in from..(args.len()) {
+        text = text + " " + &args[i];
+    }
+
+    return text;
 }
 
 fn print_help() -> () {
@@ -45,7 +78,7 @@ fn print_help() -> () {
     println!("This means you can write either:");
     println!("\twikicli new ideas newidea");
     println!("\twikicli new idea newidea");
-    println!("And achieve the same result");
+    println!("And achieve the same result.");
     println!("\nAfter providing the entryname you can choose to enter the text for the entry.");
     println!("This skips the longer entry creation process and immediately creates the entry.");
 }
