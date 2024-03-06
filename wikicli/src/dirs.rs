@@ -39,7 +39,7 @@ pub fn create(wikipath: String, name: &String) -> () {
     let newpath = wikipath + "/" + name;
     match fs::create_dir(newpath) {
         Ok(_) => println!("Created new group: {}", name),
-        Err(_) => println!("Failed to create directory for new group"),
+        Err(_) => println!("Failed to create directory for new group. The subgroup probably does not exist."),
     };
 }
 
@@ -47,11 +47,11 @@ pub fn remove(wikipath: String, name: &String) -> () {
     let removepath = wikipath + "/" + name;
     match fs::remove_dir(removepath) {
         Ok(_) => println!("Succesfully removed group: {}", name),
-        Err(_) => println!("Unable to remove group, something went wrong"),
+        Err(_) => println!("Unable to remove group, something went wrong. There's probably subgroups that haven't been removed."),
     }
 }
 
-pub fn contains(wikipath: &String, name: &String) -> bool {
+pub fn contains(wikipath: &String, name: &mut String) -> bool {
     let dirs = get_dirs(&wikipath);
 
     for dir in &dirs {
@@ -63,6 +63,7 @@ pub fn contains(wikipath: &String, name: &String) -> bool {
     let pluralized = name.to_owned() + "s";
     for dir in &dirs {
         if dir == &pluralized {
+            name.push('s');
             return true;
         }
     }
