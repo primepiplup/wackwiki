@@ -3,6 +3,7 @@ mod new;
 mod dirs;
 mod articles;
 mod user;
+mod print;
 
 use std::env;
 
@@ -20,9 +21,10 @@ fn main() {
         print_help();
     } else {
         match args[1].as_str() {
-            "help" => print_help(),
             "groups" => groups::handle(args, wikipath),
-            "new" => new::handle(args, wikipath),
+            "help"   => print_help(),
+            "new"    => new::handle(args, wikipath),
+            "print"  => print::handle(args, wikipath),
             _ => {
                 println!("Unrecognized command.\n");
                 print_help();
