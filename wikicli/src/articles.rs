@@ -2,8 +2,11 @@ use std::fs;
 use std::io;
 
 pub fn post(path: String, entryname: &String, entrytext: String) -> () {
+    let mut title: String = entryname.to_owned();
+    title = capitalize(&mut title);
+    
     let mut content = "# ".to_owned();
-    content += entryname;
+    content += &title;
     content += "\n\n";
     content += &entrytext;
     
@@ -77,4 +80,13 @@ pub fn remove_article(path: &String) -> Result<(), ()> {
         Ok(_)  => Ok(()),
         Err(_) => Err(()),
     }
+}
+
+fn capitalize(string: &mut String) -> String {
+    let first = match string.chars().next() {
+        Some(c) => c,
+        None    => return string.to_owned(),
+    };
+
+    string.replacen(first, first.to_ascii_uppercase().to_string().as_str(), 1)
 }
