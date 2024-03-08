@@ -1,4 +1,5 @@
 use std::fs;
+use std::io;
 
 pub fn post(path: String, entryname: &String, entrytext: String) -> () {
     let mut content = "# ".to_owned();
@@ -57,4 +58,16 @@ pub fn exists(path: &String, entryname: &String) -> bool {
         }
     }
     return false;
+}
+
+pub fn get_content(path: &String) -> Result<String, ()> {
+    let entry_file = match fs::File::open(path) {
+        Ok(file) => file,
+        Err(_)   => return Err(()),
+    };
+
+    match io::read_to_string(entry_file) {
+        Ok(contents) => Ok(contents),
+        Err(_)       => return Err(()),
+    }
 }
