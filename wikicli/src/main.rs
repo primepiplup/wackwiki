@@ -6,6 +6,7 @@ mod articles;
 mod user;
 mod print;
 mod remove;
+mod list;
 
 use std::env;
 
@@ -26,6 +27,7 @@ fn main() {
             "edit"   => edit::handle(args, wikipath),
             "groups" => groups::handle(args, wikipath),
             "help"   => print_help(),
+            "list"   => list::handle(args, wikipath),
             "new"    => new::handle(args, wikipath),
             "print"  => print::handle(args, wikipath),
             "remove" => remove::handle(args, wikipath),
