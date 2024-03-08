@@ -71,3 +71,10 @@ pub fn get_content(path: &String) -> Result<String, ()> {
         Err(_)       => return Err(()),
     }
 }
+
+pub fn remove_article(path: &String) -> Result<(), ()> {
+    match fs::remove_file(path) {
+        Ok(_)  => Ok(()),
+        Err(_) => Err(()),
+    }
+}
