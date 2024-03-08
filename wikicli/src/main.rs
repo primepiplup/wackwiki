@@ -1,9 +1,11 @@
+mod edit;
 mod groups;
 mod new;
 mod dirs;
 mod articles;
 mod user;
 mod print;
+mod remove;
 
 use std::env;
 
@@ -21,10 +23,12 @@ fn main() {
         print_help();
     } else {
         match args[1].as_str() {
+            "edit"   => edit::handle(args, wikipath),
             "groups" => groups::handle(args, wikipath),
             "help"   => print_help(),
             "new"    => new::handle(args, wikipath),
             "print"  => print::handle(args, wikipath),
+            "remove" => remove::handle(args, wikipath),
             _ => {
                 println!("Unrecognized command.\n");
                 print_help();
@@ -37,8 +41,11 @@ fn print_help() -> () {
     println!("Usage: ");
     println!("wikicli [subcommand]");
     println!("\nAvailable subcommands:");
-    println!("help   -- display this help message");
+    println!("edit   -- edit a wiki entry using your favourite editor");
     println!("groups -- manage groups and subgroups");
+    println!("help   -- display this help message");
     println!("new    -- create a new wiki entry");
+    println!("print  -- print the contents of a wiki entry");
+    println!("remove -- remove a wiki entry, either globally or from a (sub)group");
 }
 
