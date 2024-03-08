@@ -55,8 +55,29 @@ fn create_group_entry(args: &Vec<String>, wikipath: String, groupname: &String) 
     articles::post(path, entryname, entrytext);
 }
 
-fn create_global_entry(_args: &Vec<String>, _wikipath: String, _groupname: &String) -> () {
-    todo!();
+fn create_global_entry(args: &Vec<String>, wikipath: String, entryname: &String) -> () {
+    let path = wikipath;
+    if articles::exists(&path, entryname) {
+        println!("Article already exists, exiting.");
+        return;
+    }
+
+    let mut entrytext: String;
+    if args.len() > 3 {
+        entrytext = text_collect(4, args);
+    } else {
+        entrytext = match user::collect_entry() {
+            Ok(text) => text,
+            Err(_)   => {
+                println!("Exiting.");
+                return;
+            }
+        };
+    }
+
+    entrytext.push('\n');
+    
+    articles::post(path, entryname, entrytext);
 }
 
 fn text_collect(from: usize, args: &Vec<String>) -> String {
