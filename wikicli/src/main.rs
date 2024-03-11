@@ -46,6 +46,7 @@ fn print_help() -> () {
     println!("edit   -- edit a wiki entry using your favourite editor");
     println!("groups -- manage groups and subgroups");
     println!("help   -- display this help message");
+    println!("list   -- list the articles in the global group or subgroups");
     println!("new    -- create a new wiki entry");
     println!("print  -- print the contents of a wiki entry");
     println!("remove -- remove a wiki entry, either globally or from a (sub)group");
