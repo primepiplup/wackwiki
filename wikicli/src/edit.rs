@@ -29,10 +29,34 @@ fn edit_global_entry(args: Vec<String>, wikipath: String, wikieditor: String) {
         println!("Could not find entry");
         return;
     }
-    
+
+    let current_dir = match env::current_dir() {
+        Ok(dir) => dir,
+        Err(_)  => {
+            println!("Error occurred while getting current directory");
+            return;
+        }
+    };
+
+    match env::set_current_dir(&wikipath) {
+        Ok(_) => (),
+        Err(_) => {
+            println!("Error occurred while changing directory to wiki directory");
+            return;
+        }
+    };
+
     let path = wikipath + "/" + entryname;
 
     Command::new(wikieditor).arg(path).status().expect("Something went wrong when starting the editor.");
+
+    match env::set_current_dir(current_dir) {
+        Ok(_) => (),
+        Err(_) => {
+            println!("Error occurred while changing directory back to original directory");
+            return;
+        }
+    };
 }
 
 fn edit_group_entry(args: Vec<String>, wikipath: String, wikieditor: String) {
@@ -45,9 +69,33 @@ fn edit_group_entry(args: Vec<String>, wikipath: String, wikieditor: String) {
         return;
     }
 
+    let current_dir = match env::current_dir() {
+        Ok(dir) => dir,
+        Err(_)  => {
+            println!("Error occurred while getting current directory");
+            return;
+        }
+    };
+
+    match env::set_current_dir(&grouppath) {
+        Ok(_) => (),
+        Err(_) => {
+            println!("Error occurred while changing directory to wiki directory");
+            return;
+        }
+    };
+
     let path = grouppath + "/" + entryname;
 
     Command::new(wikieditor).arg(path).status().expect("Something went wrong when starting the editor.");
+
+    match env::set_current_dir(current_dir) {
+        Ok(_) => (),
+        Err(_) => {
+            println!("Error occurred while changing directory back to original directory");
+            return;
+        }
+    };
 }
 
 fn get_editor() -> String {
