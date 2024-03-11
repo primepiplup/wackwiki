@@ -47,7 +47,7 @@ pub fn remove(wikipath: String, name: &String) -> () {
     let removepath = wikipath + "/" + name;
     match fs::remove_dir(removepath) {
         Ok(_) => println!("Succesfully removed group: {}", name),
-        Err(_) => println!("Unable to remove group, something went wrong. There's probably subgroups that haven't been removed."),
+        Err(_) => println!("Unable to remove group, something went wrong. There's probably entries or subgroups that haven't been removed."),
     }
 }
 
