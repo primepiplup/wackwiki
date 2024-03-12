@@ -36,7 +36,7 @@ fn parse_to_html(path: String) -> Result<String, ()> {
                 return Err(());
             },
         };
-        html = html + &line + "\r\n";
+        html = html + &line + "</br>";
     }
 
     return Ok(html);
