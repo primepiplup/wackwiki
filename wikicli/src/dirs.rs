@@ -52,6 +52,20 @@ pub fn remove(wikipath: String, name: &String) -> () {
 }
 
 pub fn contains(wikipath: &String, name: &mut String) -> bool {
+    if name.contains('/') {
+        let (first, remaining) = match name.split_once('/') {
+            Some((first, remaining)) => (first, remaining),
+            None => {
+                println!("Something weird occurred during string splitting. This shouldn't happen.");
+                return false;
+            }
+        };
+        let path = wikipath.to_owned() + "/" + first;
+        let mut remaining = remaining.to_owned();
+
+        return contains(&path, &mut remaining);
+    }
+    
     let dirs = get_dirs(&wikipath);
 
     for dir in &dirs {
