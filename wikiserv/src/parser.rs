@@ -1,4 +1,4 @@
-use crate::token::{TagToken, LiteralToken, Token};
+use crate::token::{CharToken, TagToken, LiteralToken, Token};
 
 pub fn line_parse_to_html(mut line: String) -> String {
     if line.starts_with('#') {
@@ -12,29 +12,26 @@ pub fn line_parse_to_html(mut line: String) -> String {
     let mut hit_index: usize = 0;
     for (i, c) in line.chars().enumerate() {
         if c == '*' {
-            if i - hit_index > 0 {
-                let content = line.split_at(hit_index).1.split_at(i - hit_index).0;
-                tokens.push(Box::new(LiteralToken::new(content)));
-                hit_index = i + 1;
-            }
+            consume_literal(&line, &mut tokens, &mut hit_index, i);
             tokens.push(Box::new(TagToken::new("b", bold_open)));
             bold_open = !bold_open;
         }
 
         if c == '_' {
-            if i - hit_index > 0 {
-                let content = line.split_at(hit_index).1.split_at(i - hit_index).0;
-                tokens.push(Box::new(LiteralToken::new(content)));
-                hit_index = i + 1;
-            }
+            consume_literal(&line, &mut tokens, &mut hit_index, i);
             tokens.push(Box::new(TagToken::new("i", italic_open)));
             italic_open = !italic_open;
+        }
+
+        if c == ' ' {
+            consume_literal(&line, &mut tokens, &mut hit_index, i);
+            tokens.push(Box::new(CharToken::new(' ')));
         }
     }
 
     if line.len() - hit_index > 1 {
         let content = line.split_at(hit_index).1;
-        tokens.push(Box::new(LiteralToken::new(content)));
+        tokens.push(Box::new(LiteralToken::new(content.to_owned())));
     }
 
     for token in tokens {
@@ -42,6 +39,16 @@ pub fn line_parse_to_html(mut line: String) -> String {
     }
 
     return buffer;
+}
+
+fn consume_literal(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &mut usize, i: usize) -> () {
+    let content = line.split_at(*hit_index).1.split_at(i - hit_index.to_owned()).0;
+
+    // here we now have a literal piece of content that is delimited by '*','_' or ' '
+    // We can now check whether this matches any of the wiki entry paths we have.
+    
+    tokens.push(Box::new(LiteralToken::new(content.to_owned())));
+    *hit_index = i + 1;
 }
 
 fn parse_header(line: String) -> String {
