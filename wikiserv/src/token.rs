@@ -1,16 +1,16 @@
-pub struct LiteralToken<'a> {
-    content: &'a str,
+pub struct LiteralToken {
+    content: String,
 }
 
-impl LiteralToken<'_> {
-    pub fn new(content: &str) -> LiteralToken {
+impl LiteralToken {
+    pub fn new(content: String) -> LiteralToken {
         LiteralToken {
             content
         }
     }
 }
 
-impl Token for LiteralToken<'_> {
+impl Token for LiteralToken {
     fn add(&self) -> String {
         return self.content.to_owned();
     }
@@ -37,6 +37,22 @@ impl Token for TagToken<'_> {
         } else {
             return format!("</{}>", self.tag);
         }
+    }
+}
+
+pub struct CharToken {
+    c: char,
+}
+
+impl CharToken {
+    pub fn new(c: char) -> CharToken {
+        CharToken { c }
+    }
+}
+
+impl Token for CharToken {
+    fn add(&self) -> String {
+        return self.c.to_string();
     }
 }
 
