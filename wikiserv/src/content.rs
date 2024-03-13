@@ -1,3 +1,4 @@
+use crate::parser;
 use std::io::{BufReader, BufRead};
 use std::fs::File;
 
@@ -27,7 +28,7 @@ fn parse_to_html(path: String) -> Result<String, ()> {
     };
 
     let file_reader = BufReader::new(file);
-    let mut html: String = "".to_owned();
+    let mut html: String = String::new();
     for line in file_reader.lines() {
         let line = match line {
             Ok(line) => line,
@@ -36,8 +37,10 @@ fn parse_to_html(path: String) -> Result<String, ()> {
                 return Err(());
             },
         };
-        html = html + &line + "</br>";
+        let html_line = parser::line_parse_to_html(line);
+        html = html + &html_line + "</br>";
     }
 
     return Ok(html);
 }
+
