@@ -1,5 +1,6 @@
 mod content;
 mod parser;
+mod paths;
 mod token;
 
 use std::{
@@ -8,11 +9,21 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
+use paths::Paths;
+
 fn main() {
     let wikipath = match env::var("WIKIPATH") {
         Ok(path) => path,
         Err(_)   => {
             println!("WIKIPATH environment variable is undefined.");
+            return;
+        }
+    };
+
+    let paths = match paths::Paths::new(wikipath) {
+        Ok(paths) => paths,
+        Err(_)    => {
+            println!("Encountered an unrecoverable error whilst indexing wikipath");
             return;
         }
     };
@@ -34,11 +45,11 @@ fn main() {
             }
         };
 
-        handle_connection(stream, &wikipath);
+        handle_connection(stream, &paths);
     }
 }
 
-fn handle_connection(mut stream: TcpStream, wikipath: &String) -> () {
+fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
     let bufreader = BufReader::new(&mut stream);
     let mut http_request: Vec<String> = Vec::new();
     for line in bufreader.lines() {
@@ -70,7 +81,7 @@ fn handle_connection(mut stream: TcpStream, wikipath: &String) -> () {
         },
     };
 
-    let response = request_response(wikipath, requestpath);
+    let response = request_response(paths, requestpath);
 
     match stream.write_all(response.as_bytes()) {
         Ok(_) => (),
@@ -81,12 +92,10 @@ fn handle_connection(mut stream: TcpStream, wikipath: &String) -> () {
     }
 }
 
-fn request_response(wikipath: &String, requestpath: &str) -> String {
-    let path = wikipath.to_owned() + requestpath;
-    
+fn request_response(paths: &Paths, requestpath: &str) -> String {
     let status = "HTTP/1.1 200 OK";
     let headers = "";
-    let content = match content::get_html(path) {
+    let content = match content::get_html(paths, requestpath) {
         Ok(content) => content,
         Err(_)      => return four_oh_four(),
     };
