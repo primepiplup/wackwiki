@@ -91,6 +91,40 @@ impl Token for ItalicToken {
     }
 }
 
+pub struct LinkToken {
+    link: String,
+    closer: bool,
+    tokentype: TokenType,
+}
+
+impl LinkToken {
+    pub fn new(link: String, closer: bool) -> LinkToken {
+        LinkToken {
+            link,
+            closer,
+            tokentype: TokenType::LINK,
+        }
+    }
+}
+
+impl Token for LinkToken {
+    fn add(&self) -> String {
+        if !self.closer {
+            return format!("<a href=\"{}\">", self.link);
+        } else {
+            return format!("</a>");
+        }
+    }
+
+    fn tokentype(&self) -> &TokenType {
+        return &self.tokentype;
+    }
+
+    fn literal_replace(&self) -> Box<dyn Token> {
+        return Box::new(LiteralToken::new(self.link.clone()));
+    }
+}
+
 #[derive(Clone)]
 pub struct CharToken {
     c: char,
@@ -131,5 +165,6 @@ pub enum TokenType {
     BOLD,
     CHAR,
     ITALIC,
+    LINK,
     LITERAL,
 }
