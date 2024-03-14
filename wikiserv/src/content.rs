@@ -1,9 +1,10 @@
 use crate::parser;
+use crate::paths::Paths;
 use std::io::{BufReader, BufRead};
 use std::fs::File;
 
-pub fn get_html(path: String) -> Result<String, ()> {
-    let content = match parse_to_html(path) {
+pub fn get_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
+    let content = match parse_to_html(paths, requestpath) {
         Ok(content) => content,
         Err(_)      => return Err(()),
     };
@@ -18,8 +19,9 @@ pub fn get_html(path: String) -> Result<String, ()> {
 </html>"))
 }
 
-fn parse_to_html(path: String) -> Result<String, ()> {
-    let file = match File::open(path) {
+fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
+    let filepath = paths.wikipath().to_owned() + requestpath;
+    let file = match File::open(filepath) {
         Ok(file) => file,
         Err(_)   => {
             println!("Could not open requested filepath.");
@@ -37,7 +39,7 @@ fn parse_to_html(path: String) -> Result<String, ()> {
                 return Err(());
             },
         };
-        let html_line = parser::line_parse_to_html(line);
+        let html_line = parser::line_parse_to_html(line, paths, requestpath);
         html = html + &html_line + "</br>";
     }
 
