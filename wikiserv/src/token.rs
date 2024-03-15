@@ -119,6 +119,38 @@ impl Token for UnderlineToken {
     }
 
     fn literal_replace(&self) -> Box<dyn Token> {
+        return Box::new(CharToken::new('='));
+    }
+}
+
+pub struct StrikethroughToken {
+    closer: bool,
+    tokentype: TokenType,
+}
+
+impl StrikethroughToken {
+    pub fn new(closer: bool) -> StrikethroughToken {
+        StrikethroughToken {
+            closer,
+            tokentype: TokenType::UNDERLINE,
+        }
+    }
+}
+
+impl Token for StrikethroughToken {
+    fn add(&self) -> String {
+        if !self.closer {
+            return format!("<s>");
+        } else {
+            return format!("</s>");
+        }
+    }
+
+    fn tokentype(&self) -> &TokenType {
+        return &self.tokentype;
+    }
+
+    fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(CharToken::new('~'));
     }
 }

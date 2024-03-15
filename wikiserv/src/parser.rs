@@ -1,4 +1,4 @@
-use crate::{token::{BoldToken, CharToken, ItalicToken, LiteralToken, LinkToken, Token, TokenType, UnderlineToken}, paths::Paths};
+use crate::{token::{BoldToken, CharToken, ItalicToken, LiteralToken, LinkToken, Token, TokenType, StrikethroughToken, UnderlineToken}, paths::Paths};
 
 pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) -> String {
     if line.starts_with('#') {
@@ -7,9 +7,12 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
 
     let mut buffer: String = String::new();
     let mut tokens: Vec<Box<dyn Token>> = Vec::new();
+
     let mut bold_open: bool = false;
     let mut italic_open: bool = false;
     let mut underline_open: bool = false;
+    let mut strikethrough_open: bool = false;
+
     let mut hit_index: usize = 0;
     let chars: Vec<char> = line.chars().collect();
     let mut i = 0;
@@ -30,10 +33,14 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
             consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
             tokens.push(Box::new(ItalicToken::new(italic_open)));
             italic_open = !italic_open;
-        } else if chars[i] == '~' {
+        } else if chars[i] == '=' {
             consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
             tokens.push(Box::new(UnderlineToken::new(underline_open)));
             underline_open = !underline_open;
+        } else if chars[i] == '~' {
+            consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
+            tokens.push(Box::new(StrikethroughToken::new(strikethrough_open)));
+            strikethrough_open = !strikethrough_open;
         } else if chars[i] == ' ' {
             consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
             tokens.push(Box::new(CharToken::new(' ')));
