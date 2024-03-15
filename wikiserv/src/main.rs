@@ -1,6 +1,7 @@
 mod content;
 mod parser;
 mod paths;
+mod template;
 mod token;
 
 use std::{
