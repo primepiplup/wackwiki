@@ -91,6 +91,38 @@ impl Token for ItalicToken {
     }
 }
 
+pub struct UnderlineToken {
+    closer: bool,
+    tokentype: TokenType,
+}
+
+impl UnderlineToken {
+    pub fn new(closer: bool) -> UnderlineToken {
+        UnderlineToken {
+            closer,
+            tokentype: TokenType::UNDERLINE,
+        }
+    }
+}
+
+impl Token for UnderlineToken {
+    fn add(&self) -> String {
+        if !self.closer {
+            return format!("<u>");
+        } else {
+            return format!("</u>");
+        }
+    }
+
+    fn tokentype(&self) -> &TokenType {
+        return &self.tokentype;
+    }
+
+    fn literal_replace(&self) -> Box<dyn Token> {
+        return Box::new(CharToken::new('~'));
+    }
+}
+
 pub struct LinkToken {
     link: String,
     closer: bool,
@@ -167,4 +199,5 @@ pub enum TokenType {
     ITALIC,
     LINK,
     LITERAL,
+    UNDERLINE,
 }
