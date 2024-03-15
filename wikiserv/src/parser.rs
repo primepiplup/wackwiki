@@ -74,7 +74,6 @@ fn consume_literal(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &
         *hit_index = i + 1;
         return;
     }
-    println!("{}", content);
 
     let absolutepath: String;
     if content.starts_with("/") {
@@ -84,17 +83,13 @@ fn consume_literal(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &
             Some(path) => path,
             None   => return,
         }.0;
-        println!("using relative path: {}", relativepath);
         absolutepath = relativepath.to_string() + "/" + content;
     }
 
     let mut close = false;
     if paths.contains(&absolutepath) {
-        println!("inserting link to: {}", absolutepath);
         tokens.push(Box::new(LinkToken::new(absolutepath.clone(), false)));
         close = true;
-    } else {
-        print!("Paths did not contain {}", content);
     }
 
     tokens.push(Box::new(LiteralToken::new(content.to_owned())));
