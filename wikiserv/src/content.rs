@@ -1,7 +1,10 @@
 use crate::parser;
 use crate::paths::Paths;
+use crate::template::Template;
 use std::io::{BufReader, BufRead};
 use std::fs::File;
+
+static TEMPLATE: Template = Template::new();
 
 pub fn get_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
     let content = match parse_to_html(paths, requestpath) {
@@ -9,14 +12,8 @@ pub fn get_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
         Err(_)      => return Err(()),
     };
 
-    Ok(format!(
-"<html>
-    <head>
-    </head>
-    <body>
-        {content}
-    </body>
-</html>"))
+    TEMPLATE.sync();
+    Ok(TEMPLATE.encase(content))
 }
 
 fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
