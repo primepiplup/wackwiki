@@ -7,13 +7,14 @@ use std::fs::{File, read_dir};
 static TEMPLATE: Template = Template::new();
 
 pub fn get_html(paths: &Paths, mut requestpath: &str) -> Result<String, ()> {
+    TEMPLATE.sync();
     if requestpath.len() > 1 && requestpath.ends_with("/") {
         requestpath = match requestpath.rsplit_once("/") { Some((left, _)) => left, None => requestpath};
     }
     
     if requestpath == "/" || paths.contains_group(&requestpath.to_string()) {
-        println!("Trying to create a link page");
-        return Ok(link_page(paths, requestpath));
+        let content = link_page(paths, requestpath);
+        return Ok(TEMPLATE.encase(content));
     }
     
     let content = match parse_to_html(paths, requestpath) {
@@ -21,7 +22,6 @@ pub fn get_html(paths: &Paths, mut requestpath: &str) -> Result<String, ()> {
         Err(_)      => return Err(()),
     };
 
-    TEMPLATE.sync();
     Ok(TEMPLATE.encase(content))
 }
 
