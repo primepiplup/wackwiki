@@ -10,6 +10,8 @@ hook global GlobalSetOption within_wiki=true %{
     add-highlighter global/relative-wikiwords regex %sh{find . -type f | sed 's-\./--g' | tr '\n' '|'} 0:bright-cyan+u
     add-highlighter global/wackwiki-bold regex (?<!\\)\*.*?(?<!\\)\* 0:+b
     add-highlighter global/wackwiki-italic regex (?<!\\)_.*?(?<!\\)_ 0:+i
+    add-highlighter global/wackwiki-underline regex (?<!\\)=.*?(?<!\\)= 0:+u
+    add-highlighter global/wackwiki-strikethrough regex (?<!\\)~.*?(?<!\\)~ 0:+s
     add-highlighter global/wackwiki-header regex ^#.*?$ 0:bright-yellow+b
 
     define-command -docstring "Select a whitespace or newline delimited string" wiki-select-whitespace-delimited %{
