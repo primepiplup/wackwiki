@@ -218,6 +218,37 @@ impl Token for CharToken {
     }
 }
 
+#[derive(Clone)]
+pub struct BraceToken {
+    content: String,
+    link: String,
+    tokentype: TokenType,
+}
+
+impl BraceToken {
+    pub fn new(content: String, link: String) -> BraceToken {
+        BraceToken {
+            content,
+            link,
+            tokentype: TokenType::BRACE,
+        }
+    }
+}
+
+impl Token for BraceToken {
+    fn add(&self) -> String {
+        format!("<a href=\"{}\">{}</a>", self.link, self.content)
+    }
+
+    fn tokentype(&self) -> &TokenType {
+        return &self.tokentype;
+    }
+
+    fn literal_replace(&self) -> Box<dyn Token> {
+        return Box::new(self.to_owned());
+    }
+}
+
 pub trait Token {
     fn add(&self) -> String;
     fn tokentype(&self) -> &TokenType;
@@ -227,6 +258,7 @@ pub trait Token {
 #[derive(PartialEq, Clone)]
 pub enum TokenType {
     BOLD,
+    BRACE,
     CHAR,
     ITALIC,
     LINK,
