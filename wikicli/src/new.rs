@@ -1,4 +1,4 @@
-use crate::{dirs, articles, user};
+use crate::{dirs, articles, user, parser};
 
 pub fn handle(args: Vec<String>, wikipath: String) -> () {
     if args.len() < 3 {
@@ -29,7 +29,7 @@ fn create_group_entry(args: &Vec<String>, wikipath: String, groupname: &String) 
         return;
     }
 
-    let entryname = &args[3];
+    let entryname = &parser::parse_name(&args[3]);
 
     let path = wikipath + "/" + groupname;
     if articles::exists(&path, entryname) {
@@ -56,6 +56,7 @@ fn create_group_entry(args: &Vec<String>, wikipath: String, groupname: &String) 
 }
 
 fn create_global_entry(args: &Vec<String>, wikipath: String, entryname: &String) -> () {
+    let entryname = &parser::parse_name(entryname);
     let path = wikipath;
     if articles::exists(&path, entryname) {
         println!("Article already exists, exiting.");
