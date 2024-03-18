@@ -7,6 +7,7 @@ mod user;
 mod print;
 mod remove;
 mod list;
+mod parser;
 
 use std::env;
 
