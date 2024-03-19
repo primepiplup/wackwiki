@@ -94,7 +94,7 @@ fn consume_link(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &mut
         },
     };
     let link: &str = &line[(bracket_end + 2)..(brace_end + 1)];
-    *hit_index = 1 + brace_end;
+    *hit_index = 2 + brace_end;
     *i = 1 + brace_end;
     tokens.push(Box::new(BraceToken::new(content.to_string(), link.to_string())));
 }
