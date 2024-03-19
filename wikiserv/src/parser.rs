@@ -1,4 +1,4 @@
-use crate::{token::{BoldToken, CharToken, ItalicToken, LiteralToken, LinkToken, Token, TokenType, StrikethroughToken, UnderlineToken}, paths::Paths};
+use crate::{token::{BoldToken, CharToken, ItalicToken, LiteralToken, LinkToken, Token, TokenType, StrikethroughToken, UnderlineToken, BraceToken}, paths::Paths};
 
 pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) -> String {
     if line.starts_with('#') {
@@ -46,7 +46,7 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
             tokens.push(Box::new(CharToken::new(' ')));
         } else if chars[i] == '[' {
             consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
-            tokens.push(Box::new(BracketToken::new(true)));
+            consume_link(&line, &mut tokens, &mut hit_index, &mut i);
         }
 
         i += 1;
@@ -69,6 +69,34 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
     }
 
     return buffer;
+}
+
+fn consume_link(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &mut usize, i: &mut usize) -> () {
+    let (_, after) = line.split_at(*i);
+    let bracket_end = *i + match after.find(']') {
+        Some(res) => res,
+        None      => {
+            println!("Malformed link found while parsing - ignoring and continuing.");
+            return;
+        },
+    };
+    let content: &str = &line[(*i + 1)..(bracket_end)];
+    if line.chars().collect::<Vec<char>>()[bracket_end + 1] != '(' {
+        println!("Malformed link found while parsing - ignoring and continuing.");
+        return;
+    }
+    let (_, after) = line.split_at(bracket_end + 2);
+    let brace_end = 1 + bracket_end + match after.find(')') {
+        Some(res) => res,
+        None      => {
+            println!("Malformed link found while parsing - ignoring and continuing.");
+            return;
+        },
+    };
+    let link: &str = &line[(bracket_end + 2)..(brace_end + 1)];
+    *hit_index = 1 + brace_end;
+    *i = 1 + brace_end;
+    tokens.push(Box::new(BraceToken::new(content.to_string(), link.to_string())));
 }
 
 fn consume_literal(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &mut usize, i: usize, paths: &Paths, requestpath: &str) -> () {
