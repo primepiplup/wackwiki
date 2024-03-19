@@ -17,6 +17,8 @@ pub fn parse_name(text: &String) -> String {
         parts.push(parse_format_string(content));
     }
 
+    parts.push(string.to_string());
+
     let mut return_string: String = String::new();
     for part in parts {
         return_string = return_string + part.as_str();
