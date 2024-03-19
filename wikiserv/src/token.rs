@@ -44,7 +44,7 @@ impl BoldToken {
 impl Token for BoldToken {
     fn add(&self) -> String {
         if !self.closer {
-            return format!("<b>");
+            return format!("<b class=\"wiki-bold\">");
         } else {
             return format!("</b>");
         }
@@ -76,7 +76,7 @@ impl ItalicToken {
 impl Token for ItalicToken {
     fn add(&self) -> String {
         if !self.closer {
-            return format!("<i>");
+            return format!("<i class=\"wiki-italic\">");
         } else {
             return format!("</i>");
         }
@@ -108,7 +108,7 @@ impl UnderlineToken {
 impl Token for UnderlineToken {
     fn add(&self) -> String {
         if !self.closer {
-            return format!("<u>");
+            return format!("<u class=\"wiki-underline\">");
         } else {
             return format!("</u>");
         }
@@ -140,7 +140,7 @@ impl StrikethroughToken {
 impl Token for StrikethroughToken {
     fn add(&self) -> String {
         if !self.closer {
-            return format!("<s>");
+            return format!("<s class=\"wiki-strikethrough\">");
         } else {
             return format!("</s>");
         }
@@ -174,7 +174,7 @@ impl LinkToken {
 impl Token for LinkToken {
     fn add(&self) -> String {
         if !self.closer {
-            return format!("<a href=\"{}\">", self.link);
+            return format!("<a class=\"wiki-autolink\" href=\"{}\">", self.link);
         } else {
             return format!("</a>");
         }
@@ -237,7 +237,11 @@ impl BraceToken {
 
 impl Token for BraceToken {
     fn add(&self) -> String {
-        format!("<a href=\"{}\">{}</a>", self.link, self.content)
+        if self.link.ends_with(".jpg") || self.link.ends_with(".png") {
+            format!("<img class=\"wiki-image-link\" src=\"{}\" alt=\"{}\" />", self.link, self.content)
+        } else {
+            format!("<a class=\"wiki-external-link\" href=\"{}\">{}</a>", self.link, self.content)
+        }
     }
 
     fn tokentype(&self) -> &TokenType {
