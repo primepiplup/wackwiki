@@ -3,6 +3,7 @@ mod parser;
 mod paths;
 mod template;
 mod token;
+mod images;
 
 use std::{
     env,
@@ -84,7 +85,7 @@ fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
 
     let response = request_response(paths, requestpath);
 
-    match stream.write_all(response.as_bytes()) {
+    match stream.write_all(&response) {
         Ok(_) => (),
         Err(_) => {
             println!("Something went wrong while responding to HTTP request.");
@@ -93,18 +94,38 @@ fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
     }
 }
 
-fn request_response(paths: &Paths, requestpath: &str) -> String {
+fn request_response(paths: &Paths, requestpath: &str) -> Vec<u8> {
     let status = "HTTP/1.1 200 OK";
-    let headers = "";
-    let content = match content::get_html(paths, requestpath) {
-        Ok(content) => content,
-        Err(_)      => return four_oh_four(),
-    };
+    let mut headers = "";
+    let mut content: Vec<u8>;
+
+    if requestpath.ends_with(".jpg")  {
+        content = match images::get_image(paths, requestpath) {
+            Ok(content) => content,
+            Err(_)      => return four_oh_four(),
+        };
+        headers = "Content-Type: image/jpeg\r\n";
+    } else if requestpath.ends_with(".png") {
+        content = match images::get_image(paths, requestpath) {
+            Ok(content) => content,
+            Err(_)      => return four_oh_four(),
+        };
+        headers = "Content-Type: image/png\r\n";
+    } else {
+        content = match content::get_html(paths, requestpath) {
+            Ok(content) => content,
+            Err(_)      => return four_oh_four(),
+        };
+    }
+
     let length = content.len();
 
-    format!("{status}\r\nContent-Length: {length}\r\n{headers}\r\n{content}")
+    let mut html_head = format!("{status}\r\nContent-Length: {length}\r\n{headers}\r\n").as_bytes().to_vec();
+
+    html_head.append(&mut content);
+    return html_head;
 }
 
-fn four_oh_four() -> String {
-    return "HTTP/1.1 404 Not Found\r\n\r\n".to_owned();
+fn four_oh_four() -> Vec<u8> {
+    return "HTTP/1.1 404 Not Found\r\n\r\n".as_bytes().to_vec();
 }
