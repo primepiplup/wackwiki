@@ -51,6 +51,9 @@ fn eat_entries(files: ReadDir, path: &String, relativepath: &String, paths: &mut
                     Ok(string) => string,
                     Err(_) => continue
                 };
+                if dir_name.starts_with(".") {
+                    return;
+                }
                 let dirpath = path.clone() + relativepath + "/" + &dir_name;
                 println!("reading dir: {}", dirpath);
                 let files = match fs::read_dir(dirpath) {

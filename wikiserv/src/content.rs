@@ -69,6 +69,9 @@ fn link_page(paths: &Paths, requestpath: &str) -> String {
                 Ok(file_name) => file_name,
                 Err(_)        => continue,
             };
+            if file_name.starts_with(".") {
+                continue;
+            }
             let elementpath: String;
             if requestpath == "/" {
                 elementpath = requestpath.to_string() + &file_name;
