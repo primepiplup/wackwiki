@@ -28,6 +28,9 @@ pub fn get_dirs(wikipath: &String) -> Vec<String> {
                         return dirs;
                     }
                 };
+                if filename.starts_with(".") {
+                    continue;
+                }
                 dirs.push(filename);
             }
         }

@@ -45,6 +45,9 @@ pub fn list_articles(path: &String) -> Vec<String> {
                         return files;
                     }
                 };
+                if filename.starts_with(".") {
+                    continue;
+                }
                 files.push(filename);
             }
         }
