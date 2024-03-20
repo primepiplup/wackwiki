@@ -6,7 +6,7 @@ use std::fs::{File, read_dir};
 
 static TEMPLATE: Template = Template::new();
 
-pub fn get_html(paths: &Paths, mut requestpath: &str) -> Result<String, ()> {
+pub fn get_html(paths: &Paths, mut requestpath: &str) -> Result<Vec<u8>, ()> {
     TEMPLATE.sync();
     if requestpath.len() > 1 && requestpath.ends_with("/") {
         requestpath = match requestpath.rsplit_once("/") { Some((left, _)) => left, None => requestpath};
@@ -14,7 +14,7 @@ pub fn get_html(paths: &Paths, mut requestpath: &str) -> Result<String, ()> {
     
     if requestpath == "/" || paths.contains_group(&requestpath.to_string()) {
         let content = link_page(paths, requestpath);
-        return Ok(TEMPLATE.encase(content));
+        return Ok(TEMPLATE.encase(content).as_bytes().to_vec());
     }
     
     let content = match parse_to_html(paths, requestpath) {
@@ -22,7 +22,7 @@ pub fn get_html(paths: &Paths, mut requestpath: &str) -> Result<String, ()> {
         Err(_)      => return Err(()),
     };
 
-    Ok(TEMPLATE.encase(content))
+    Ok(TEMPLATE.encase(content).as_bytes().to_vec())
 }
 
 fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
