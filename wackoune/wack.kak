@@ -6,8 +6,8 @@ hook global GlobalSetOption within_wiki=true %{
     declare-option str wikigroup
     set-option global wikigroup %sh{pwd | sed 's\'"$WIKIPATH"'/\\g'}
 
-    add-highlighter global/global-wikiwords regex %sh{find $WIKIPATH -type f | sed 's\'"$WIKIPATH"'\\g' | tr '\n' '|'} 0:yellow+u
-    add-highlighter global/relative-wikiwords regex %sh{find . -type f | sed 's-\./--g' | tr '\n' '|'} 0:bright-cyan+u
+    add-highlighter global/global-wikiwords regex %sh{find $WIKIPATH -type f | grep -v "\..*$" | sed 's\'"$WIKIPATH"'\\g' | tr '\n' '|'} 0:yellow+u
+    add-highlighter global/relative-wikiwords regex %sh{find . -type f | grep -v "\./\..*$" | sed 's-\./--g' | tr '\n' '|'} 0:bright-cyan+u
     add-highlighter global/wackwiki-bold regex (?<!\\)\*.*?(?<!\\)\* 0:+b
     add-highlighter global/wackwiki-italic regex (?<!\\)_.*?(?<!\\)_ 0:+i
     add-highlighter global/wackwiki-underline regex (?<!\\)=.*?(?<!\\)= 0:+u
