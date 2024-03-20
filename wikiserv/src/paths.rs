@@ -52,7 +52,7 @@ fn eat_entries(files: ReadDir, path: &String, relativepath: &String, paths: &mut
                     Err(_) => continue
                 };
                 if dir_name.starts_with(".") {
-                    return;
+                    continue;
                 }
                 let dirpath = path.clone() + relativepath + "/" + &dir_name;
                 println!("reading dir: {}", dirpath);
@@ -68,6 +68,9 @@ fn eat_entries(files: ReadDir, path: &String, relativepath: &String, paths: &mut
                     Ok(string) => string,
                     Err(_) => continue
                 };
+                if file_name.starts_with(".") {
+                    continue;
+                }
                 let filepath = relativepath.to_owned() + "/" + &file_name;
                 println!("Found entry: {}", filepath);
                 paths.push(filepath);
