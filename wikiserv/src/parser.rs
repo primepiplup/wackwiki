@@ -44,6 +44,12 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
         } else if chars[i] == ' ' {
             consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
             tokens.push(Box::new(CharToken::new(' ')));
+        } else if chars[i] == '(' {
+            consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
+            tokens.push(Box::new(CharToken::new('(')));
+        } else if chars[i] == ')' {
+            consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
+            tokens.push(Box::new(CharToken::new(')')));
         } else if chars[i] == '[' {
             consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
             consume_link(&line, &mut tokens, &mut hit_index, &mut i);
