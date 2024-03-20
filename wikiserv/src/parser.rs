@@ -41,12 +41,12 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
             consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
             tokens.push(Box::new(StrikethroughToken::new(strikethrough_open)));
             strikethrough_open = !strikethrough_open;
-        } else if chars[i] == ' ' || chars[i] == '(' || chars[i] == ')' || chars[i] == '[' || chars[i] == ']' || chars[i] == '{' || chars[i] == '}' {
+        } else if chars[i] == ' ' || chars[i] == '(' || chars[i] == ')' || chars[i] == '{' || chars[i] == '}' {
             consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
             tokens.push(Box::new(CharToken::new(chars[i])));
         } else if chars[i] == '[' {
             consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
-            consume_link(&line, &mut tokens, &mut hit_index, &mut i);
+            consume_link(&line, &mut tokens, &mut hit_index, &mut i, paths, requestpath);
         }
 
         i += 1;
@@ -71,7 +71,7 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
     return buffer;
 }
 
-fn consume_link(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &mut usize, i: &mut usize) -> () {
+fn consume_link(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &mut usize, i: &mut usize, paths: &Paths, requestpath: &str) -> () {
     let (_, after) = line.split_at(*i);
     let bracket_end = *i + match after.find(']') {
         Some(res) => res,
@@ -93,10 +93,33 @@ fn consume_link(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &mut
             return;
         },
     };
-    let link: &str = &line[(bracket_end + 2)..(brace_end + 1)];
+    let link: String = convert_link(&line[(bracket_end + 2)..(brace_end + 1)], paths, requestpath);
     *hit_index = 2 + brace_end;
     *i = 1 + brace_end;
-    tokens.push(Box::new(BraceToken::new(content.to_string(), link.to_string())));
+    tokens.push(Box::new(BraceToken::new(content.to_string(), link)));
+}
+
+fn convert_link(link: &str, _paths: &Paths, requestpath: &str) -> String {
+    if link.starts_with("http") { return link.to_string(); }
+    if link.starts_with("/") {
+        // Absolute Path
+        let (relativepath, filename) = match link.rsplit_once("/") {
+            Some(split) => split,
+            None   => ("", requestpath),
+        };
+        return relativepath.to_string() + "/.images/" + filename;
+    } else {
+        // Relative Path
+        let (relativepath, _) = match requestpath.rsplit_once("/") {
+            Some(split) => split,
+            None   => ("", requestpath),
+        };
+        let (partpath, filename) = match link.rsplit_once("/") {
+            Some(split) => split,
+            None   => ("", link),
+        };
+        return relativepath.to_string() + partpath + "/.images/" + filename;
+    }
 }
 
 fn consume_literal(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &mut usize, i: usize, paths: &Paths, requestpath: &str) -> () {
