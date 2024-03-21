@@ -1,4 +1,4 @@
-use crate::parser;
+use crate::parser::{self, Status};
 use crate::paths::Paths;
 use crate::template::Template;
 use std::io::{BufReader, BufRead};
@@ -35,6 +35,8 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
         }
     };
 
+    let mut in_paragraph: bool = false;
+
     let file_reader = BufReader::new(file);
     let mut html: String = String::new();
     for line in file_reader.lines() {
@@ -45,9 +47,26 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
                 return Err(());
             },
         };
-        let html_line = parser::line_parse_to_html(line, paths, requestpath);
-        if html_line == "" { continue; }
-        html = html + "<p class=\"wiki-paragraph\">" + &html_line + "</p>";
+        let line = line.trim().to_string();
+        if line.is_empty() && in_paragraph {
+            html = html + "</p>";
+            in_paragraph = false;
+            continue;
+        }
+        
+        let (html_line, status) = parser::line_parse_to_html(line, paths, requestpath);
+
+        if status == Status::Paragraph && !in_paragraph {
+            html = html + "<p class=\"wiki-paragraph\">";
+            in_paragraph = true;
+        } else if status == Status::Paragraph {
+            html = html + "</br>";
+        } else if status == Status::Header && in_paragraph {
+            in_paragraph = false;
+            html = html + "</p>";
+        }
+
+        html = html + &html_line;
     }
 
     return Ok(html);
@@ -85,3 +104,4 @@ fn link_page(paths: &Paths, requestpath: &str) -> String {
 
     return html;
 }
+
