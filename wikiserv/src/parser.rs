@@ -107,7 +107,7 @@ fn convert_link(link: &str, _paths: &Paths, requestpath: &str) -> String {
             Some(split) => split,
             None   => ("", requestpath),
         };
-        return relativepath.to_string() + "/.images/" + filename;
+        return relativepath.to_string() + "/.link/" + filename;
     } else {
         // Relative Path
         let (relativepath, _) = match requestpath.rsplit_once("/") {
@@ -118,7 +118,7 @@ fn convert_link(link: &str, _paths: &Paths, requestpath: &str) -> String {
             Some(split) => split,
             None   => ("", link),
         };
-        return relativepath.to_string() + partpath + "/.images/" + filename;
+        return relativepath.to_string() + partpath + "/.link/" + filename;
     }
 }
 
