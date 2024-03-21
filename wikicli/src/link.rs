@@ -2,6 +2,8 @@ use std::fs;
 use std::path::Path;
 use std::os::unix::fs::symlink;
 
+use crate::articles::list_articles;
+
 pub fn handle(args: Vec<String>, wikipath: String) -> () {
     if args.len() < 3 {
         print_help();
@@ -10,6 +12,7 @@ pub fn handle(args: Vec<String>, wikipath: String) -> () {
 
     match args[2].as_str() {
         "add" => add(wikipath, args),
+        "list" => list(wikipath, args),
         "remove" => remove(wikipath, args),
         _ => print_help(),
     }
@@ -131,12 +134,30 @@ fn remove(wikipath: String, args: Vec<String>) -> () {
     }
 }
 
+fn list(wikipath: String, args: Vec<String>) -> () {
+    let group: String;
+    if args.len() > 3 {
+        group = args[3].to_owned();
+    } else {
+        group = String::new();
+    }
+
+    let grouppath = wikipath + "/" + &group + "/.link";
+
+    let elements = list_articles(&grouppath);
+
+    for element in elements {
+        println!("{}", element);
+    }
+}
+
 fn print_help() -> () {
     println!("Usage:");
     println!("wikicli link [subcommand]");
     println!("\nSubcommands:");
     println!("add    -- add a file to a group's relative path");
     println!("help   -- display this help message");
+    println!("list   -- list the links contained in a group");
     println!("remove -- remove a file from a group's relative path");
 }
 
