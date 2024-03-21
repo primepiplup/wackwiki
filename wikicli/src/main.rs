@@ -6,6 +6,7 @@ mod articles;
 mod user;
 mod print;
 mod remove;
+mod link;
 mod list;
 mod parser;
 
@@ -28,6 +29,7 @@ fn main() {
             "edit"   => edit::handle(args, wikipath),
             "groups" => groups::handle(args, wikipath),
             "help"   => print_help(),
+            "link"   => link::handle(args, wikipath),
             "list"   => list::handle(args, wikipath),
             "new"    => new::handle(args, wikipath),
             "print"  => print::handle(args, wikipath),
@@ -47,6 +49,7 @@ fn print_help() -> () {
     println!("edit   -- edit a wiki entry using your favourite editor");
     println!("groups -- manage groups and subgroups");
     println!("help   -- display this help message");
+    println!("link   -- link files to mentions within wiki entries");
     println!("list   -- list the articles in the global group or subgroups");
     println!("new    -- create a new wiki entry");
     println!("print  -- print the contents of a wiki entry");
