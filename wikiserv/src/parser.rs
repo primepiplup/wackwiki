@@ -1,8 +1,11 @@
 use crate::{token::{BoldToken, CharToken, ItalicToken, LiteralToken, LinkToken, Token, TokenType, StrikethroughToken, UnderlineToken, BraceToken}, paths::Paths};
 
-pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) -> String {
+pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) -> (String, Status) {
+    let mut status = Status::Paragraph;
+    
     if line.starts_with('#') {
-        line = parse_header(line);
+        line = parse_header(&line);
+        status = Status::Header;
     }
 
     let mut buffer: String = String::new();
@@ -68,10 +71,10 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
         buffer += &token.add();
     }
 
-    return buffer;
+    return (buffer, status);
 }
 
-fn consume_link(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &mut usize, i: &mut usize, paths: &Paths, requestpath: &str) -> () {
+fn consume_link(line: &str, tokens: &mut Vec<Box<dyn Token>>, hit_index: &mut usize, i: &mut usize, paths: &Paths, requestpath: &str) -> () {
     let (_, after) = line.split_at(*i);
     let bracket_end = *i + match after.find(']') {
         Some(res) => res,
@@ -122,7 +125,7 @@ fn convert_link(link: &str, _paths: &Paths, requestpath: &str) -> String {
     }
 }
 
-fn consume_literal(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &mut usize, i: usize, paths: &Paths, requestpath: &str) -> () {
+fn consume_literal(line: &str, tokens: &mut Vec<Box<dyn Token>>, hit_index: &mut usize, i: usize, paths: &Paths, requestpath: &str) -> () {
     let content = line.split_at(*hit_index).1.split_at(i - hit_index.to_owned()).0;
     if content == "" {
         *hit_index = i + 1;
@@ -154,7 +157,7 @@ fn consume_literal(line: &String, tokens: &mut Vec<Box<dyn Token>>, hit_index: &
     }
 }
 
-fn parse_header(line: String) -> String {
+fn parse_header(line: &str) -> String {
     let mut chars = line.chars();
     let mut pound_count = 0;
 
@@ -186,4 +189,10 @@ fn remove_last(tokens: &mut Vec<Box<dyn Token>>, tokentype: TokenType) -> () {
             break;
         }
     }
+}
+
+#[derive(PartialEq)]
+pub enum Status {
+    Header,
+    Paragraph,
 }
