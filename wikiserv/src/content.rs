@@ -46,7 +46,8 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
             },
         };
         let html_line = parser::line_parse_to_html(line, paths, requestpath);
-        html = html + &html_line + "</br>";
+        if html_line == "" { continue; }
+        html = html + "<p class=\"wiki-paragraph\">" + &html_line + "</p>";
     }
 
     return Ok(html);
