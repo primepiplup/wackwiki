@@ -208,5 +208,6 @@ fn remove_last(tokens: &mut Vec<Box<dyn Token>>, tokentype: TokenType) -> () {
 pub enum Status {
     BlockQuote,
     Header,
+    Nothing,
     Paragraph,
 }
