@@ -1,14 +1,15 @@
 use crate::{token::{BoldToken, CharToken, ItalicToken, LiteralToken, LinkToken, Token, TokenType, StrikethroughToken, UnderlineToken, BraceToken}, paths::Paths};
 
 pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) -> (String, Status) {
+    let mut buffer: String = String::new();
     let mut status = Status::Paragraph;
-    
-    if line.starts_with('#') {
+
+    if line.trim().is_empty() {
+        return (line, Status::Empty);
+    } else if line.starts_with('#') {
         line = parse_header(&line);
         status = Status::Header;
-    }
-
-    if line.trim_start().starts_with(">") {
+    } else if line.trim_start().starts_with(">") {
         let mut counter = 0;
         for c in line.trim_start().chars() {
             if c == '>' {
@@ -17,11 +18,34 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
                 break;
             }
         }
-        line = remove_arrow(&line, counter);
+        line = remove_num_chars_from_start(&line, counter);
         status = Status::BlockQuote(counter);
+    } else if line.trim_start().starts_with("-") {
+        let mut counter = 0;
+        for c in line.chars() {
+            if c == ' ' {
+                counter += 1;
+            } else {
+                break;
+            }
+        }
+        line = remove_char_from_start(&line, '-');
+        status = Status::UnorderedList(counter / 4);
+        buffer += "<li>";
+    } else if line.trim_start().chars().collect::<Vec<char>>()[0].is_numeric() {
+        let mut counter = 0;
+        for c in line.chars() {
+            if c == ' ' {
+                counter += 1;
+            } else {
+                break;
+            }
+        }
+        line = remove_char_from_start(&line, '.');
+        status = Status::OrderedList(counter / 4);
+        buffer += "<li>";
     }
 
-    let mut buffer: String = String::new();
     let mut tokens: Vec<Box<dyn Token>> = Vec::new();
 
     let mut bold_open: bool = false;
@@ -82,6 +106,12 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
 
     for token in tokens {
         buffer += &token.add();
+    }
+
+    if let Status::UnorderedList(_) = status {
+        buffer += "</li>";
+    } else if let Status::OrderedList(_) = status {
+        buffer += "</li>";
     }
 
     return (buffer, status);
@@ -195,7 +225,16 @@ fn parse_header(line: &str) -> String {
     return format!("<h{pound_count}>{header_content}</h{pound_count}>");
 }
 
-fn remove_arrow(line: &String, counter: usize) -> String {
+fn remove_char_from_start(line: &String, c: char) -> String {
+    let line = line.trim_start();
+    let (_, line) = match line.split_once(c) {
+        Some(split) => split,
+        None        => ("", line),
+    };
+    line.trim_start().to_string()
+}
+
+fn remove_num_chars_from_start(line: &String, counter: usize) -> String {
     let line = line.trim_start();
     let (_, line) = line.split_at(counter);
     line.trim_start().to_string()
@@ -213,7 +252,9 @@ fn remove_last(tokens: &mut Vec<Box<dyn Token>>, tokentype: TokenType) -> () {
 #[derive(PartialEq)]
 pub enum Status {
     BlockQuote(usize),
+    Empty,
     Header,
-    Nothing,
+    OrderedList(usize),
     Paragraph,
+    UnorderedList(usize),
 }
