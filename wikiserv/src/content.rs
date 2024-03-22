@@ -35,8 +35,7 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
         }
     };
 
-    let mut in_paragraph: bool = false;
-    let mut in_blockquote: bool = false;
+    let mut previous: Status = Status::Nothing;
 
     let file_reader = BufReader::new(file);
     let mut html: String = String::new();
@@ -48,50 +47,47 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
                 return Err(());
             },
         };
-        let line = line.trim().to_string();
-        if line.is_empty() && in_paragraph {
+        let trimmed_line = line.trim();
+        if trimmed_line.is_empty() && previous == Status::Paragraph {
             html = html + "</p>";
-            in_paragraph = false;
+            previous = Status::Nothing;
             continue;
         }
 
-        if line.is_empty() && in_blockquote {
+        if trimmed_line.is_empty() && previous == Status::BlockQuote {
             html = html + "</blockquote>";
-            in_blockquote = false;
+            previous = Status::Nothing;
             continue;
         }
         
         let (html_line, status) = parser::line_parse_to_html(line, paths, requestpath);
 
-        if status != Status::Paragraph && in_paragraph {
-            in_paragraph = false;
+        if status != Status::Paragraph && previous == Status::Paragraph {
             html = html + "</p>";
         }
 
-        if status != Status::BlockQuote && in_blockquote {
-            in_blockquote = false;
+        if status != Status::BlockQuote && previous == Status::BlockQuote {
             html = html + "</blockquote>";
         }
 
         if status == Status::Paragraph {
-            if !in_paragraph {
+            if previous != Status::Paragraph {
                 html = html + "<p class=\"wiki-paragraph\">";
-                in_paragraph = true;
             } else {
                 html = html + "</br>";
             } 
         }
 
         if status == Status::BlockQuote {
-            if !in_blockquote {
+            if previous != Status::BlockQuote {
                 html = html + "<blockquote class=\"wiki-blockquote\">";
-                in_blockquote = true;
             } else {
                 html = html + "</br>";
             }
         }
 
         html = html + &html_line;
+        previous = status;
     }
 
     return Ok(html);
