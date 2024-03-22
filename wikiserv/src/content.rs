@@ -3,6 +3,7 @@ use crate::paths::Paths;
 use crate::template::Template;
 use std::io::{BufReader, BufRead};
 use std::fs::{File, read_dir};
+use std::mem::discriminant;
 
 static TEMPLATE: Template = Template::new();
 
@@ -49,25 +50,27 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
         };
         let trimmed_line = line.trim();
         if trimmed_line.is_empty() && previous == Status::Paragraph {
-            html = html + "</p>";
+            match previous {
+                Status::Paragraph => { html = html + "</p>"; },
+                Status::BlockQuote(_) => { html = html + "</blockquote>"; },
+                _ => (),
+            }
             previous = Status::Nothing;
             continue;
         }
-
-        if trimmed_line.is_empty() && previous == Status::BlockQuote {
-            html = html + "</blockquote>";
-            previous = Status::Nothing;
-            continue;
-        }
-        
+       
         let (html_line, status) = parser::line_parse_to_html(line, paths, requestpath);
 
         if status != Status::Paragraph && previous == Status::Paragraph {
             html = html + "</p>";
         }
 
-        if status != Status::BlockQuote && previous == Status::BlockQuote {
-            html = html + "</blockquote>";
+        if let Status::BlockQuote(level) = previous {
+            if discriminant(&status) != discriminant(&Status::BlockQuote(1)) {
+                for _ in 0..level {
+                    html = html + "</blockquote>";
+                }
+            }
         }
 
         if status == Status::Paragraph {
@@ -78,11 +81,21 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
             } 
         }
 
-        if status == Status::BlockQuote {
-            if previous != Status::BlockQuote {
-                html = html + "<blockquote class=\"wiki-blockquote\">";
+        if let Status::BlockQuote(level) = status {
+            if let Status::BlockQuote(prev_level) = previous {
+                if level < prev_level {
+                    for _ in level..prev_level {
+                        html = html + "</blockquote>";
+                    }
+                } else if level > prev_level {
+                    for _ in prev_level..level {
+                        html = html + "<blockquote class=\"wiki-blockquote\">";
+                    }
+                } else {
+                    html = html + "</br>";
+                }
             } else {
-                html = html + "</br>";
+                html = html + "<blockquote class=\"wiki-blockquote\">";
             }
         }
 
