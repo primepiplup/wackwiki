@@ -36,7 +36,7 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
         }
     };
 
-    let mut previous: Status = Status::Nothing;
+    let mut previous: Status = Status::Empty;
 
     let file_reader = BufReader::new(file);
     let mut html: String = String::new();
@@ -48,29 +48,11 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
                 return Err(());
             },
         };
-        let trimmed_line = line.trim();
-        if trimmed_line.is_empty() && previous == Status::Paragraph {
-            match previous {
-                Status::Paragraph => { html = html + "</p>"; },
-                Status::BlockQuote(_) => { html = html + "</blockquote>"; },
-                _ => (),
-            }
-            previous = Status::Nothing;
-            continue;
-        }
        
         let (html_line, status) = parser::line_parse_to_html(line, paths, requestpath);
 
         if status != Status::Paragraph && previous == Status::Paragraph {
             html = html + "</p>";
-        }
-
-        if let Status::BlockQuote(level) = previous {
-            if discriminant(&status) != discriminant(&Status::BlockQuote(1)) {
-                for _ in 0..level {
-                    html = html + "</blockquote>";
-                }
-            }
         }
 
         if status == Status::Paragraph {
@@ -79,6 +61,14 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
             } else {
                 html = html + "</br>";
             } 
+        }
+
+        if let Status::BlockQuote(level) = previous {
+            if discriminant(&status) != discriminant(&Status::BlockQuote(1)) {
+                for _ in 0..level {
+                    html = html + "</blockquote>";
+                }
+            }
         }
 
         if let Status::BlockQuote(level) = status {
@@ -96,6 +86,54 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
                 }
             } else {
                 html = html + "<blockquote class=\"wiki-blockquote\">";
+            }
+        }
+
+        if let Status::UnorderedList(level) = previous {
+            if discriminant(&status) != discriminant(&Status::UnorderedList(1)) {
+                for _ in 0..(level + 1) {
+                    html = html + "</ul>";
+                }
+            }
+        }
+
+        if let Status::UnorderedList(level) = status {
+            if let Status::UnorderedList(prev_level) = previous {
+                if level < prev_level {
+                    for _ in level..prev_level {
+                        html = html + "</ul>";
+                    }
+                } else if level > prev_level {
+                    for _ in prev_level..level {
+                        html = html + "<ul class=\"wiki-ul\">";
+                    }
+                }
+            } else {
+                html = html + "<ul class=\"wiki-ul\">";
+            }
+        }
+
+        if let Status::OrderedList(level) = previous {
+            if discriminant(&status) != discriminant(&Status::OrderedList(1)) {
+                for _ in 0..(level + 1) {
+                    html = html + "</ol>";
+                }
+            }
+        }
+
+        if let Status::OrderedList(level) = status {
+            if let Status::OrderedList(prev_level) = previous {
+                if level < prev_level {
+                    for _ in level..prev_level {
+                        html = html + "</ol>";
+                    }
+                } else if level > prev_level {
+                    for _ in prev_level..level {
+                        html = html + "<ol class=\"wiki-ol\">";
+                    }
+                }
+            } else {
+                html = html + "<ol class=\"wiki-ol\">";
             }
         }
 
