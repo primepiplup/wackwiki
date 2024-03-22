@@ -8,9 +8,17 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
         status = Status::Header;
     }
 
-    if line.starts_with(">") {
-        line = remove_arrow(&line);
-        status = Status::BlockQuote;
+    if line.trim_start().starts_with(">") {
+        let mut counter = 0;
+        for c in line.trim_start().chars() {
+            if c == '>' {
+                counter += 1;
+            } else {
+                break;
+            }
+        }
+        line = remove_arrow(&line, counter);
+        status = Status::BlockQuote(counter);
     }
 
     let mut buffer: String = String::new();
@@ -187,11 +195,9 @@ fn parse_header(line: &str) -> String {
     return format!("<h{pound_count}>{header_content}</h{pound_count}>");
 }
 
-fn remove_arrow(line: &String) -> String {
-    let (_, line) = match line.split_once(">") {
-        Some(split) => split,
-        None    => ("", line.as_str()),
-    };
+fn remove_arrow(line: &String, counter: usize) -> String {
+    let line = line.trim_start();
+    let (_, line) = line.split_at(counter);
     line.trim_start().to_string()
 }
 
@@ -206,7 +212,7 @@ fn remove_last(tokens: &mut Vec<Box<dyn Token>>, tokentype: TokenType) -> () {
 
 #[derive(PartialEq)]
 pub enum Status {
-    BlockQuote,
+    BlockQuote(usize),
     Header,
     Nothing,
     Paragraph,
