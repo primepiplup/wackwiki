@@ -1,4 +1,50 @@
 #[derive(Clone)]
+pub struct TodoToken {
+    checked: bool,
+    tokentype: TokenType,
+    line_num: usize,
+    col_num: usize,
+}
+
+impl TodoToken {
+    pub fn new(checked: bool, line_num: usize, col_num: usize) -> TodoToken {
+        TodoToken {
+            checked,
+            tokentype: TokenType::TODO,
+            line_num,
+            col_num,
+        }
+    }
+}
+
+impl Token for TodoToken {
+    fn add(&self) -> String {
+        if self.checked {
+            return format!("<input type=\"checkbox\" class=\"wiki-todo\" name=\"wiki-box-{}-{}\" checked onclick=\"clickLocation({}, {})\">", self.line_num, self.col_num, self.line_num, self.col_num);
+        } else {
+            return format!("<input type=\"checkbox\" class=\"wiki-todo\" name=\"wiki-box-{}-{}\" onclick=\"clickLocation({}, {})\">", self.line_num, self.col_num, self.line_num, self.col_num);
+        }
+    }
+
+    fn tokentype(&self) -> &TokenType {
+        return &self.tokentype;
+    }
+
+    fn literal_replace(&self) -> Box<dyn Token> {
+        return Box::new(self.to_owned());
+    }
+
+    fn functionality(&self) -> String {
+        return format!(
+"<script>
+function clickLocation(lineNum, colNum) {{
+    console.log(\"testing!\" + lineNum + colNum);
+}}
+</script>");
+    }
+}
+
+#[derive(Clone)]
 pub struct LiteralToken {
     content: String,
     tokentype: TokenType,
@@ -24,6 +70,10 @@ impl Token for LiteralToken {
 
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(self.to_owned());
+    }
+
+    fn functionality(&self) -> String {
+        return format!("");
     }
 }
 
@@ -57,6 +107,10 @@ impl Token for BoldToken {
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(CharToken::new('*'));
     }
+
+    fn functionality(&self) -> String {
+        return format!("");
+    }
 }
 
 pub struct ItalicToken {
@@ -88,6 +142,10 @@ impl Token for ItalicToken {
 
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(CharToken::new('_'));
+    }
+
+    fn functionality(&self) -> String {
+        return format!("");
     }
 }
 
@@ -121,6 +179,10 @@ impl Token for UnderlineToken {
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(CharToken::new('='));
     }
+
+    fn functionality(&self) -> String {
+        return format!("");
+    }
 }
 
 pub struct StrikethroughToken {
@@ -152,6 +214,10 @@ impl Token for StrikethroughToken {
 
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(CharToken::new('~'));
+    }
+
+    fn functionality(&self) -> String {
+        return format!("");
     }
 }
 
@@ -187,6 +253,10 @@ impl Token for LinkToken {
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(LiteralToken::new(self.link.clone()));
     }
+
+    fn functionality(&self) -> String {
+        return format!("");
+    }
 }
 
 #[derive(Clone)]
@@ -215,6 +285,10 @@ impl Token for CharToken {
 
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(self.to_owned());
+    }
+
+    fn functionality(&self) -> String {
+        return format!("");
     }
 }
 
@@ -251,12 +325,17 @@ impl Token for BraceToken {
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(self.to_owned());
     }
+
+    fn functionality(&self) -> String {
+        return format!("");
+    }
 }
 
 pub trait Token {
     fn add(&self) -> String;
     fn tokentype(&self) -> &TokenType;
     fn literal_replace(&self) -> Box<dyn Token>;
+    fn functionality(&self) -> String;
 }
 
 #[derive(PartialEq, Clone)]
@@ -267,5 +346,6 @@ pub enum TokenType {
     ITALIC,
     LINK,
     LITERAL,
+    TODO,
     UNDERLINE,
 }
