@@ -1,8 +1,11 @@
-use crate::{token::{BoldToken, CharToken, ItalicToken, LiteralToken, LinkToken, Token, TokenType, StrikethroughToken, UnderlineToken, BraceToken}, paths::Paths};
+use crate::{token::{BoldToken, CharToken, ItalicToken, LiteralToken, LinkToken, Token, TokenType, StrikethroughToken, TodoToken, UnderlineToken, BraceToken}, paths::Paths};
 
-pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) -> (String, Status) {
+pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str, line_num: usize) -> (String, Status) {
     let mut buffer: String = String::new();
     let mut status = Status::Paragraph;
+    let mut start_offset = 0;
+    let mut hit_index: usize = 0;
+    let mut i = 0;
 
     if line.trim().is_empty() {
         return (line, Status::Empty);
@@ -12,8 +15,13 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
     } else if line.trim_start().starts_with(">") {
         let mut counter = 0;
         for c in line.trim_start().chars() {
+            if c == ' ' {
+                start_offset += 1;
+                continue;
+            }
             if c == '>' {
                 counter += 1;
+                start_offset += 1;
             } else {
                 break;
             }
@@ -21,9 +29,11 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
         line = remove_num_chars_from_start(&line, counter);
         status = Status::BlockQuote(counter);
     } else if line.trim_start().starts_with("-") {
+        start_offset += 1;
         let mut counter = 0;
         for c in line.chars() {
             if c == ' ' {
+                start_offset += 1;
                 counter += 1;
             } else {
                 break;
@@ -33,9 +43,11 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
         status = Status::UnorderedList(counter / 4);
         buffer += "<li>";
     } else if line.trim_start().chars().collect::<Vec<char>>()[0].is_numeric() {
+        start_offset += 1;
         let mut counter = 0;
         for c in line.chars() {
             if c == ' ' {
+                start_offset += 1;
                 counter += 1;
             } else {
                 break;
@@ -53,9 +65,7 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
     let mut underline_open: bool = false;
     let mut strikethrough_open: bool = false;
 
-    let mut hit_index: usize = 0;
     let chars: Vec<char> = line.chars().collect();
-    let mut i = 0;
     while i < chars.len() {
         if chars[i] == '\\' {
             consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
@@ -86,7 +96,18 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
             tokens.push(Box::new(CharToken::new(chars[i])));
         } else if chars[i] == '[' {
             consume_literal(&line, &mut tokens, &mut hit_index, i, paths, requestpath);
-            consume_link(&line, &mut tokens, &mut hit_index, &mut i, paths, requestpath);
+            if is_list(&status) && chars.len() > i + 1 && (chars[i + 1] == ' ' || chars[i + 1] == 'X') && chars[i + 2] == ']' {
+                let col_num = start_offset + i + 3;
+                if chars[i + 1] == ' ' {
+                    tokens.push(Box::new(TodoToken::new(false, line_num + 1, col_num)));
+                } else {
+                    tokens.push(Box::new(TodoToken::new(true, line_num + 1, col_num)));
+                }
+                i += 2;
+                hit_index += 2;
+            } else {
+                consume_link(&line, &mut tokens, &mut hit_index, &mut i, paths, requestpath);
+            }
         }
 
         i += 1;
@@ -106,6 +127,9 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str) ->
 
     for token in tokens {
         buffer += &token.add();
+        if token.tokentype() == &TokenType::TODO {
+            buffer += &token.functionality();
+        }
     }
 
     if let Status::UnorderedList(_) = status {
@@ -247,6 +271,10 @@ fn remove_last(tokens: &mut Vec<Box<dyn Token>>, tokentype: TokenType) -> () {
             break;
         }
     }
+}
+
+fn is_list(status: &Status) -> bool {
+    return std::mem::discriminant(status) == std::mem::discriminant(&Status::OrderedList(1)) || std::mem::discriminant(status) == std::mem::discriminant(&Status::UnorderedList(1));
 }
 
 #[derive(PartialEq)]
