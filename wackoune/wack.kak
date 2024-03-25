@@ -13,7 +13,7 @@ hook global GlobalSetOption within_wiki=true %{
     add-highlighter global/wackwiki-underline regex (?<!\\)=.*?(?<!\\)= 0:+u
     add-highlighter global/wackwiki-strikethrough regex (?<!\\)~.*?(?<!\\)~ 0:+s
     add-highlighter global/wackwiki-header regex ^#.*?$ 0:bright-yellow+b
-    add-highlighter global/wackwiki-link regex \[(?<content>.*?)\]\((?<link>.*?)\) 0:blue content:+b link:+i
+    add-highlighter global/wackwiki-link regex \[(?<content>(?S).*?)\]\((?<link>(?S).*?)\) content:blue+b link:blue+i
 
     define-command -docstring "Select a whitespace or newline delimited string" wiki-select-whitespace-delimited %{
         execute-keys %{<a-/>(\h|\n)<ret>L<a-;>?(\h|\n)<ret>H}
