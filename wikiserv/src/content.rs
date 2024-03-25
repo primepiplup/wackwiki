@@ -40,7 +40,7 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
 
     let file_reader = BufReader::new(file);
     let mut html: String = String::new();
-    for line in file_reader.lines() {
+    for (line_num, line) in file_reader.lines().enumerate() {
         let line = match line {
             Ok(line) => line,
             Err(_)   => {
@@ -49,7 +49,7 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
             },
         };
        
-        let (html_line, status) = parser::line_parse_to_html(line, paths, requestpath);
+        let (html_line, status) = parser::line_parse_to_html(line, paths, requestpath, line_num);
 
         if status != Status::Paragraph && previous == Status::Paragraph {
             html = html + "</p>";
