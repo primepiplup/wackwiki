@@ -33,15 +33,6 @@ impl Token for TodoToken {
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(self.to_owned());
     }
-
-    fn functionality(&self) -> String {
-        return format!(
-"<script>
-function clickLocation(lineNum, colNum) {{
-    console.log(\"testing!\" + lineNum + colNum);
-}}
-</script>");
-    }
 }
 
 #[derive(Clone)]
@@ -70,10 +61,6 @@ impl Token for LiteralToken {
 
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(self.to_owned());
-    }
-
-    fn functionality(&self) -> String {
-        return format!("");
     }
 }
 
@@ -106,11 +93,7 @@ impl Token for BoldToken {
 
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(CharToken::new('*'));
-    }
-
-    fn functionality(&self) -> String {
-        return format!("");
-    }
+    } 
 }
 
 pub struct ItalicToken {
@@ -142,10 +125,6 @@ impl Token for ItalicToken {
 
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(CharToken::new('_'));
-    }
-
-    fn functionality(&self) -> String {
-        return format!("");
     }
 }
 
@@ -179,10 +158,6 @@ impl Token for UnderlineToken {
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(CharToken::new('='));
     }
-
-    fn functionality(&self) -> String {
-        return format!("");
-    }
 }
 
 pub struct StrikethroughToken {
@@ -214,10 +189,6 @@ impl Token for StrikethroughToken {
 
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(CharToken::new('~'));
-    }
-
-    fn functionality(&self) -> String {
-        return format!("");
     }
 }
 
@@ -253,10 +224,6 @@ impl Token for LinkToken {
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(LiteralToken::new(self.link.clone()));
     }
-
-    fn functionality(&self) -> String {
-        return format!("");
-    }
 }
 
 #[derive(Clone)]
@@ -285,10 +252,6 @@ impl Token for CharToken {
 
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(self.to_owned());
-    }
-
-    fn functionality(&self) -> String {
-        return format!("");
     }
 }
 
@@ -325,17 +288,12 @@ impl Token for BraceToken {
     fn literal_replace(&self) -> Box<dyn Token> {
         return Box::new(self.to_owned());
     }
-
-    fn functionality(&self) -> String {
-        return format!("");
-    }
 }
 
 pub trait Token {
     fn add(&self) -> String;
     fn tokentype(&self) -> &TokenType;
     fn literal_replace(&self) -> Box<dyn Token>;
-    fn functionality(&self) -> String;
 }
 
 #[derive(PartialEq, Clone)]
