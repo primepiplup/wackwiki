@@ -141,6 +141,8 @@ fn parse_to_html(paths: &Paths, requestpath: &str) -> Result<String, ()> {
         previous = status;
     }
 
+    html = html + &functionality(requestpath);
+
     return Ok(html);
 }
 
@@ -177,3 +179,19 @@ fn link_page(paths: &Paths, requestpath: &str) -> String {
     return html;
 }
 
+fn functionality(requestpath: &str) -> String {
+    return format!(
+"<script>
+    function clickLocation(lineNum, colNum) {{
+        console.log(\"testing!\" + lineNum + colNum + \"{}\");
+
+        fetch(\"{}\", {{
+            method: \"POST\",
+            body: `line_num:${{lineNum}}&col_num:${{colNum}}`,
+            headers: {{
+                \"Content-Type\": \"text/plain\",
+            }},
+        }})
+    }}
+</script>", requestpath, requestpath);
+}
