@@ -127,9 +127,6 @@ pub fn line_parse_to_html(mut line: String, paths: &Paths, requestpath: &str, li
 
     for token in tokens {
         buffer += &token.add();
-        if token.tokentype() == &TokenType::TODO {
-            buffer += &token.functionality();
-        }
     }
 
     if let Status::UnorderedList(_) = status {
