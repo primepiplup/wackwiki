@@ -54,6 +54,8 @@ fn main() {
 fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
     let bufreader = BufReader::new(&mut stream);
     let mut http_request: Vec<String> = Vec::new();
+
+    let mut counter = 0;
     for line in bufreader.lines() {
         let requestpart = match line {
             Ok(part) => part,
@@ -62,9 +64,14 @@ fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
                 return;
             }
         };
-        if requestpart == "" {
-            break;
+        if requestpart.is_empty() {
+            if counter >= 5 {
+                break;
+            }
+            counter += 1;
         }
+        println!("{}", requestpart);
+
         http_request.push(requestpart);
     }
 
@@ -83,7 +90,37 @@ fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
         },
     };
 
-    let response = request_response(paths, requestpath);
+    let method: &str = match match http_request.get(0) {
+        Some(first_line) => first_line,
+        None             => {
+            println!("Malformed request. Dropping connection.");
+            return;
+        }
+    }
+        .split_whitespace().collect::<Vec<&str>>().get(0) {
+        Some(path) => path,
+        None       => {
+            println!("Malformed request. Dropping connection.");
+            return;
+        },
+    };
+
+    let response: Vec<u8>;
+    if method == "GET" {
+        response = get_response(paths, requestpath);
+    } else if method == "POST" {
+        let body: String = match http_request.last() {
+            Some(last) => last.to_owned(),
+            None   => {
+            println!("Malformed request. Dropping connection.");
+            return;
+            },
+        };
+        
+        response = post_response(paths, requestpath, body);
+    } else {
+        response = fourhundred();
+    }
 
     match stream.write_all(&response) {
         Ok(_) => (),
@@ -94,7 +131,17 @@ fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
     }
 }
 
-fn request_response(paths: &Paths, requestpath: &str) -> Vec<u8> {
+fn post_response(paths: &Paths, requestpath: &str, body: String) -> Vec<u8> {
+    let status = "HTTP/1.1 200 OK";
+    let mut headers = "";
+    let mut content: Vec<u8> = Vec::new();
+
+    println!("{}", body);
+    
+    return content;
+}
+
+fn get_response(paths: &Paths, requestpath: &str) -> Vec<u8> {
     let status = "HTTP/1.1 200 OK";
     let mut headers = "";
     let mut content: Vec<u8>;
@@ -128,4 +175,8 @@ fn request_response(paths: &Paths, requestpath: &str) -> Vec<u8> {
 
 fn four_oh_four() -> Vec<u8> {
     return "HTTP/1.1 404 Not Found\r\n\r\n".as_bytes().to_vec();
+}
+
+fn fourhundred() -> Vec<u8> {
+    return "HTTP/1.1 400 Bad Request\r\n\r\n".as_bytes().to_vec();
 }
