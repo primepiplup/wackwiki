@@ -54,70 +54,104 @@ fn main() {
 fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
     let bufreader = BufReader::new(&mut stream);
     let mut http_request: Vec<String> = Vec::new();
+    let mut buffer: Vec<u8> = Vec::new();
 
-    let mut counter = 0;
-    for line in bufreader.lines() {
-        let requestpart = match line {
-            Ok(part) => part,
+    let mut requestpath: String = String::new();
+    let mut method: String = String::new();
+    let mut body: String = String::new();
+    let mut size = 0;
+    for (i, byte) in bufreader.bytes().enumerate() {
+        let byte = match byte {
+            Ok(byte) => byte,
             Err(_)   => {
-                println!("Error occurred during parsing of HTTP request. Dropping connection.");
+                println!("Reading byte went wrong.");
                 return;
             }
         };
-        if requestpart.is_empty() {
-            if counter >= 5 {
+
+        if byte == 0b0 {
+            break;
+        }
+
+        if byte == b'\n' {
+            let requestpart = match String::from_utf8(buffer) {
+                Ok(string) => string,
+                Err(_)     => {
+                    println!("Could not read bytes into utf8 string.");
+                    return;
+                }
+            };
+
+            println!("{}", requestpart);
+
+            if requestpart == "\r" {
                 break;
             }
-            counter += 1;
-        }
-        println!("{}", requestpart);
 
-        http_request.push(requestpart);
+            if requestpart.contains("Content-Length") {
+                let content_size = match requestpart.split_once(": ") {
+                    Some((_, num)) => num,
+                    None => {
+                        println!("Something impossible happened during line parsing.");
+                        return;
+                    }
+                };
+                size = match content_size.parse() {
+                    Ok(num) => num,
+                    Err(_)  => {
+                        println!("Expected content length number - something went wrong.");
+                        return;
+                    }
+                };
+                println!("Parsed length: {}", size);
+            }
+
+            http_request.push(requestpart);
+            buffer = Vec::new();
+            continue;
+        }
+        buffer.push(byte);
     }
 
-    let requestpath: &str = match match http_request.get(0) {
-        Some(first_line) => first_line,
-        None             => {
-            println!("Malformed request. Dropping connection.");
-            return;
-        }
-    }
-        .split_whitespace().collect::<Vec<&str>>().get(1) {
-        Some(path) => path,
+    requestpath = match http_request[0].split_whitespace().collect::<Vec<&str>>().get(1) {
+        Some(path) => path.to_string(),
         None       => {
-            println!("Malformed request. Dropping connection.");
+            println!("Could not find requestpath, killing connection.");
             return;
-        },
+        }
     };
 
-    let method: &str = match match http_request.get(0) {
-        Some(first_line) => first_line,
-        None             => {
-            println!("Malformed request. Dropping connection.");
+    method = match http_request[0].split_whitespace().collect::<Vec<&str>>().get(0) {
+        Some(path) => path.to_string(),
+        None       => {
+            println!("Could not find requestpath, killing connection.");
             return;
         }
-    }
-        .split_whitespace().collect::<Vec<&str>>().get(0) {
-        Some(path) => path,
-        None       => {
-            println!("Malformed request. Dropping connection.");
-            return;
-        },
     };
+
+    if method == "POST" {
+        println!("Handling post request");
+
+        if size == 0 {
+            println!("No content found in POST request.");
+            return;
+        }
+
+        println!("Trying to read {} bytes.", size);
+
+        let bufreader = BufReader::new(&mut stream);
+        for (i, byte) in bufreader.bytes().enumerate() {
+            println!("{}", i);
+        }
+
+        println!("Body size read from POST request: {}", size);
+    }
 
     let response: Vec<u8>;
     if method == "GET" {
-        response = get_response(paths, requestpath);
+        response = get_response(paths, &requestpath);
     } else if method == "POST" {
-        let body: String = match http_request.last() {
-            Some(last) => last.to_owned(),
-            None   => {
-            println!("Malformed request. Dropping connection.");
-            return;
-            },
-        };
-        
-        response = post_response(paths, requestpath, body);
+        response = post_response(paths, &requestpath, body);
     } else {
         response = fourhundred();
     }
@@ -128,7 +162,7 @@ fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
             println!("Something went wrong while responding to HTTP request.");
             return;
         }
-    }
+    };
 }
 
 fn post_response(paths: &Paths, requestpath: &str, body: String) -> Vec<u8> {
