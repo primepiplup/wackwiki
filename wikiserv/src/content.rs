@@ -183,15 +183,13 @@ fn functionality(requestpath: &str) -> String {
     return format!(
 "<script>
     function clickLocation(lineNum, colNum) {{
-        console.log(\"testing!\" + lineNum + colNum + \"{}\");
-
         fetch(\"{}\", {{
             method: \"POST\",
-            body: `line_num:${{lineNum}}&col_num:${{colNum}}`,
+            body: `checkbox:${{lineNum}}|${{colNum}}\n`,
             headers: {{
                 \"Content-Type\": \"text/plain\",
             }},
         }})
     }}
-</script>", requestpath, requestpath);
+</script>", requestpath);
 }
