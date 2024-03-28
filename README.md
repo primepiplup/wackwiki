@@ -63,7 +63,7 @@ You can make text striken through by surrounding it with =
 
 You can make text underlined by surrounding it with -
 
-You can make by putting a > in front, multiple > characters deepen the quote level.
+You can make text into a blockquote by putting a > in front, multiple > characters deepen the quote level.
 
 You can make unordered lists by putting a - at the start of a line. Indenting with four spaces increases the indentation level of the list.
 
