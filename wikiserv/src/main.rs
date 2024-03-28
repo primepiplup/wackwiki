@@ -1,6 +1,7 @@
 mod content;
 mod parser;
 mod paths;
+mod post;
 mod template;
 mod token;
 mod images;
@@ -56,11 +57,12 @@ fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
     let mut http_request: Vec<String> = Vec::new();
     let mut buffer: Vec<u8> = Vec::new();
 
-    let mut requestpath: String = String::new();
-    let mut method: String = String::new();
+    let requestpath: String;
+    let method: String;
     let mut body: String = String::new();
+    let mut readbody: bool = false;
     let mut size = 0;
-    for (i, byte) in bufreader.bytes().enumerate() {
+    for byte in bufreader.bytes() {
         let byte = match byte {
             Ok(byte) => byte,
             Err(_)   => {
@@ -69,8 +71,21 @@ fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
             }
         };
 
-        if byte == 0b0 {
-            break;
+        if readbody {
+            buffer.push(byte);
+            size -= 1;
+            if size > 0 {
+                continue;
+            } else {
+                body = match String::from_utf8(buffer) {
+                    Ok(string) => string,
+                    Err(_)     => {
+                        println!("Could not read bytes for body into utf8 string.");
+                        return;
+                    }
+                };
+                break;
+            }
         }
 
         if byte == b'\n' {
@@ -82,13 +97,17 @@ fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
                 }
             };
 
-            println!("{}", requestpart);
-
             if requestpart == "\r" {
-                break;
+                if size == 0 {
+                    break;
+                } else {
+                    buffer = Vec::new();
+                    readbody = true;
+                    continue;
+                }
             }
 
-            if requestpart.contains("Content-Length") {
+            if requestpart.contains("Length") {
                 let content_size = match requestpart.split_once(": ") {
                     Some((_, num)) => num,
                     None => {
@@ -96,14 +115,13 @@ fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
                         return;
                     }
                 };
-                size = match content_size.parse() {
+                size = match content_size.trim().parse() {
                     Ok(num) => num,
                     Err(_)  => {
                         println!("Expected content length number - something went wrong.");
                         return;
                     }
                 };
-                println!("Parsed length: {}", size);
             }
 
             http_request.push(requestpart);
@@ -129,24 +147,6 @@ fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
         }
     };
 
-    if method == "POST" {
-        println!("Handling post request");
-
-        if size == 0 {
-            println!("No content found in POST request.");
-            return;
-        }
-
-        println!("Trying to read {} bytes.", size);
-
-        let bufreader = BufReader::new(&mut stream);
-        for (i, byte) in bufreader.bytes().enumerate() {
-            println!("{}", i);
-        }
-
-        println!("Body size read from POST request: {}", size);
-    }
-
     let response: Vec<u8>;
     if method == "GET" {
         response = get_response(paths, &requestpath);
@@ -167,12 +167,28 @@ fn handle_connection(mut stream: TcpStream, paths: &Paths) -> () {
 
 fn post_response(paths: &Paths, requestpath: &str, body: String) -> Vec<u8> {
     let status = "HTTP/1.1 200 OK";
-    let mut headers = "";
-    let mut content: Vec<u8> = Vec::new();
+    let headers = "";
 
-    println!("{}", body);
+    let (command, command_info) = match body.split_once(":") {
+        Some(split) => split,
+        None        => {
+            println!("Malformed body within POST request. Returning 400.");
+            return fourhundred();
+        }
+    };
+
+    let content = match post::handle(paths, requestpath, command, command_info) {
+        Ok(content) => content,
+        Err(_)      => {
+            println!("");
+            return fourhundred();
+        }
+    };
+
+    let length = content.len();
     
-    return content;
+    let html_head = format!("{status}\r\nContent-Length: {length}\r\n{headers}\r\n").as_bytes().to_vec();
+    return html_head;
 }
 
 fn get_response(paths: &Paths, requestpath: &str) -> Vec<u8> {
