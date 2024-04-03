@@ -179,9 +179,9 @@ fn post_response(paths: &Paths, requestpath: &str, body: String) -> Vec<u8> {
 
     let mut content = match post::handle(paths, requestpath, command, command_info) {
         Ok(content) => content,
-        Err(_)      => {
+        Err(num)      => {
             println!("");
-            return http::basic_response(400);
+            return http::basic_response(num);
         }
     };
 
